@@ -1,0 +1,112 @@
+```
+import torchvision
+import torch
+import cv2
+from PIL import Image
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+import os
+import torch.nn as nn
+import sys
+import sys
+from d2lzh_pytorch import *
+import numpy as np
+
+num_inputs = 2
+num_examples = 1000
+true_w = [2, -3.4]
+true_b = 4.2
+features = torch.from_numpy(np.random.normal(0, 1, (num_examples,
+num_inputs)))
+labels = true_w[0] * features[:, 0] + true_w[1] * features[:, 1] +true_b
+labels += torch.from_numpy(np.random.normal(0, 0.01,size=labels.size()))
+
+set_figsize()
+
+plt.scatter(features[:, 1].numpy(), labels.numpy(), 1)
+plt.show()
+
+batch_size=10
+for x,y in data_iter(batch_size,features,labels):
+    print(x,y)
+    break
+
+w=torch.normal(0,0.01,(num_inputs,1),dtype=torch.float64)
+b=torch.zeros(1,dtype=torch.float32)
+
+w.requires_grad=True
+b.requires_grad=True
+
+lr=0.03
+num_epochs=3
+net=linreg
+loss=squared_loss
+
+for epoch in range(num_epochs):
+    for x,y in data_iter(batch_size,features,labels):
+        l = loss(net(x, w, b), y).sum()
+        l.backward()
+        sgd([w,b],lr,batch_size)
+
+        w.grad.zero_()
+        b.grad.zero_()
+
+
+
+    train_l=loss(net(features,w,b),labels)
+    print('epoch %d,loss %f' % (epoch+1,train_l.mean().item() ))
+```
+
+```
+#d2lzh_pytorch
+import torchvision
+import torch
+import cv2
+from PIL import Image
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+import os
+import torch.nn as nn
+import sys
+from IPython import display
+import matplotlib.pyplot as plt
+import random
+
+def get_fashion_mnist_labels(labels):
+    text_labels = ['t-shirt', 'trouser', 'pullover', 'dress',
+                   'coat',
+                   'sandal', 'shirt', 'sneaker', 'bag', 'ankleboot']
+    return [text_labels(int[i]) for i in labels]
+
+def squared_loss(y_hat, y): # 本函数已保存在d2lzh_pytorch包中⽅便以后
+ # 注意这⾥返回的是向量, 另外, pytorch⾥的MSELoss并没有除以 2
+    return (y_hat - y.view(y_hat.size())) ** 2 / 2
+
+def sgd(params, lr, batch_size):
+    for param in params:
+        param.data -= lr * param.grad / batch_size
+
+def use_svg_display():
+ # ⽤⽮量图显示
+    display.set_matplotlib_formats('svg')
+def set_figsize(figsize=(3.5, 2.5)):
+    use_svg_display()
+ # 设置图的尺⼨
+    plt.rcParams['figure.figsize'] = figsize
+
+def data_iter(batch_size, features, labels):
+        num_examples=len(features)
+        indice=list(range(num_examples))
+        random.shuffle(indice)
+        for i in range(0,num_examples,batch_size):
+            j=torch.LongTensor(indice[i:min(i+batch_size,num_examples)])
+            yield features.index_select(0,j),labels.index_select(0,j)
+
+def linreg(x,w,b):
+    return torch.mm(x,w)+b
+def squared_loss(y_hat,y):
+    return (y_hat-y.view(y_hat.size()))**2/2
+def sgd(params, lr, batch_size): # 本函数已保存在d2lzh_pytorch包
+    for param in params:
+        param.data -= lr * param.grad / batch_size
+```
